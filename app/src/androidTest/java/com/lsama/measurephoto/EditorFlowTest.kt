@@ -65,7 +65,7 @@ class EditorFlowTest {
             val saved=store.dao.allPhotos().first {it.id==photo.id};assertEquals("2500",store.document(saved).segments.single().dimension)
             compose.onNodeWithContentDescription("照片菜单").performClick()
             compose.onNodeWithText("标注设置").performClick()
-            compose.onNodeWithContentDescription("画线后自动填写尺寸").performClick()
+            compose.onNodeWithContentDescription("标注后自动填写尺寸").performClick()
             compose.waitUntil(10000) {var disabled=false;scenario.onActivity {disabled= !ViewModelProvider(it)[AppModel::class.java].autoDimension};disabled}
             assertFalse(store.autoDimension())
             screenshot("05-input-setting");compose.onNodeWithText("完成").performClick();compose.waitForIdle()

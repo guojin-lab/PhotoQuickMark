@@ -13,10 +13,12 @@ data class Vertex(val id: String = uid(), val x: Float, val y: Float) { val poin
 data class Pen(val color: Int = 0xFFC23D31.toInt(), val width: Float = 3f, val font: Float = 20f, val arrowSize: Float = DEFAULT_ARROW_SIZE)
 enum class DimensionUnit(val label: String) { MM("mm"), CM("cm") }
 data class Segment(val id: String = uid(), val start: String, val end: String, val dimension: String? = null,
-    val pen: Pen = Pen(), val unit: DimensionUnit? = null) {
+    val pen: Pen = Pen(), val unit: DimensionUnit? = null, val textSize: Float = DEFAULT_LABEL_TEXT) {
     // Null comes from documents written before units existed; those were all millimetres.
     val dimensionUnit get() = unit ?: DimensionUnit.MM
     val displayDimension get() = dimension?.let { "$it ${dimensionUnit.label}" }
+    // Gson leaves a field absent from older JSON at JVM zero, so 0 means "labels were never sized".
+    val labelSize get() = if(textSize>0f) textSize.coerceIn(MIN_LABEL_TEXT,MAX_LABEL_TEXT) else DEFAULT_LABEL_TEXT
 }
 data class Document(val schemaVersion: Int = 1, val revision: Long = 0, val vertices: List<Vertex> = emptyList(), val segments: List<Segment> = emptyList()) {
     fun vertex(id: String) = vertices.first { it.id == id }

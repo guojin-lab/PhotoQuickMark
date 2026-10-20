@@ -2,6 +2,10 @@ package com.lsama.measurephoto.model
 
 import kotlin.math.*
 
+const val DEFAULT_LABEL_TEXT = 14f
+const val MIN_LABEL_TEXT = 10f
+const val MAX_LABEL_TEXT = 40f
+
 /** Rotated capsule in image space, centred on the segment midpoint and aligned with the line. */
 data class LabelGeometry(val center: Point,val width: Float,val height: Float,val angle: Float)
 

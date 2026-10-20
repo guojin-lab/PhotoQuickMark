@@ -37,9 +37,10 @@ object Photos {
     }
 }
 object Renderer {
-    private const val LABEL_TEXT = 14f
     private const val LABEL_PAD_X = 8f
     private const val LABEL_PAD_Y = 4f
+    /** Pixels that one text-size unit spans on this photo; [zoom] is the editor's pinch factor over the fit scale. */
+    private fun labelUnit(w: Float,h: Float,zoom: Float)=min(w,h)/360f/max(zoom,0.05f)
     private fun textPaint(size: Float)=Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color=Color.WHITE;textSize=size;typeface=Typeface.create("sans-serif",Typeface.BOLD)
     }
@@ -48,16 +49,23 @@ object Renderer {
         val r=(background shr 16) and 0xFF;val g=(background shr 8) and 0xFF;val b=background and 0xFF
         return if(0.299f*r+0.587f*g+0.114f*b>200) 0xFF232725.toInt() else Color.WHITE
     }
-    fun label(doc: Document,s: Segment,w: Float,h: Float): LabelGeometry? {
+    /** Capsule measured from the bold text at the segment's own size, plus 8/4 padding. */
+    private fun layout(doc: Document,s: Segment,w: Float,h: Float,zoom: Float): Pair<LabelGeometry,Paint>? {
         val text=s.displayDimension ?: return null
-        val a=doc.vertex(s.start);val b=doc.vertex(s.end);val unit=min(w,h)/360f
-        val p=textPaint(LABEL_TEXT*unit)
-        // Capsule fits the bold text plus 8/4 padding; clamped only for very long values.
-        val width=min(w,p.measureText(text)+2*LABEL_PAD_X*unit)
-        val height=min(h,(p.fontMetrics.descent-p.fontMetrics.ascent)+2*LABEL_PAD_Y*unit)
-        return labelGeometry(Point(a.x*w,a.y*h),Point(b.x*w,b.y*h),width,height)
+        val a=doc.vertex(s.start);val b=doc.vertex(s.end)
+        val u=labelUnit(w,h,zoom)
+        val p=textPaint(s.labelSize*u)
+        val padX=LABEL_PAD_X*u;val padY=LABEL_PAD_Y*u
+        val width=min(w,p.measureText(text)+2*padX)
+        val height=min(h,(p.fontMetrics.descent-p.fontMetrics.ascent)+2*padY)
+        // A value too wide for the photo keeps its capsule and loses point size instead.
+        val maxText=(width-2*padX).coerceAtLeast(1f)
+        val measured=p.measureText(text)
+        if(measured>maxText) p.textSize*=max(0.1f,maxText/measured)
+        return labelGeometry(Point(a.x*w,a.y*h),Point(b.x*w,b.y*h),width,height) to p
     }
-    fun annotations(c: Canvas,doc: Document,w: Float,h: Float) {
+    fun label(doc: Document,s: Segment,w: Float,h: Float,zoom: Float=1f): LabelGeometry?=layout(doc,s,w,h,zoom)?.first
+    fun annotations(c: Canvas,doc: Document,w: Float,h: Float,zoom: Float=1f) {
         val unit=min(w,h)/360f
         val p=Paint(Paint.ANTI_ALIAS_FLAG).apply {strokeCap=Paint.Cap.ROUND;strokeJoin=Paint.Join.ROUND}
         val fill=Paint(Paint.ANTI_ALIAS_FLAG).apply {style=Paint.Style.FILL}
@@ -80,10 +88,8 @@ object Renderer {
         }
         // Second pass: opaque capsules sit above every line, including crossing ones.
         val capsule=Paint(Paint.ANTI_ALIAS_FLAG).apply {style=Paint.Style.FILL}
-        doc.segments.forEach { s->label(doc,s,w,h)?.let { g->
-            val text=s.displayDimension!!;val t=textPaint(LABEL_TEXT*unit)
-            val maxText=(g.width-2*LABEL_PAD_X*unit).coerceAtLeast(1f)
-            if(t.measureText(text)>maxText) t.textSize*=max(0.1f,maxText/t.measureText(text))
+        doc.segments.forEach { s->layout(doc,s,w,h,zoom)?.let {(g,t)->
+            val text=s.displayDimension!!
             val color=s.pen.color or 0xFF000000.toInt()
             val cx=g.center.x;val cy=g.center.y
             c.save()

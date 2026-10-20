@@ -105,7 +105,7 @@ import java.util.Locale
         }}}) {padding->
             if(project==null) {
                 if(projects.isEmpty()) Column(Modifier.padding(padding).fillMaxSize().padding(32.dp),verticalArrangement=Arrangement.Center,horizontalAlignment=Alignment.Start) {
-                    Icon(Icons.Outlined.Straighten,null,Modifier.size(48.dp),tint=Green);Spacer(Modifier.height(24.dp));Text("把尺寸，记在现场。",fontSize=25.sp,fontWeight=FontWeight.Medium);Spacer(Modifier.height(12.dp));Text("建立一个项目，拍下现场照片。\n画线、记尺寸，整理成完整的量尺记录。",color=Quiet,lineHeight=25.sp);Spacer(Modifier.height(32.dp));Primary("新建项目",Icons.Outlined.Add){newProject=true}
+                    Icon(Icons.Outlined.Straighten,null,Modifier.size(48.dp),tint=Green);Spacer(Modifier.height(24.dp));Text("把尺寸，记在现场。",fontSize=25.sp,fontWeight=FontWeight.Medium);Spacer(Modifier.height(12.dp));Text("建立一个项目，拍下现场照片。\n标注、记尺寸，整理成完整的量尺记录。",color=Quiet,lineHeight=25.sp);Spacer(Modifier.height(32.dp));Primary("新建项目",Icons.Outlined.Add){newProject=true}
                 } else LazyColumn(Modifier.padding(padding).fillMaxSize(),contentPadding=PaddingValues(horizontal=20.dp,vertical=8.dp)) {
                     items(projects,key={it.id}) {p->val items=photos.filter {it.projectId==p.id};var more by remember {mutableStateOf(false)}
                         Row(Modifier.fillMaxWidth().clickable {projectId=p.id}.padding(vertical=16.dp),verticalAlignment=Alignment.CenterVertically) {

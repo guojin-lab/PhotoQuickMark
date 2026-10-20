@@ -53,7 +53,8 @@ import kotlin.math.roundToInt
     DisposableEffect(lifecycle,photo.id) {val observer=LifecycleEventObserver {_,event->if(event==Lifecycle.Event.ON_STOP) vm.flush()};lifecycle.lifecycle.addObserver(observer);onDispose {lifecycle.lifecycle.removeObserver(observer)}}
     BackHandler {when {dimensionId!=null->dimensionId=null;note->{note=false;vm.flush()};vm.selected!=null->vm.selected=null;else->onBack()}}
     // Live slider feedback without polluting undo history; the final value is committed on release.
-    val previewDoc=vm.previewPen?.let {p->vm.selected?.let {id->vm.doc.update(id){it.copy(pen=p)}}} ?: vm.doc
+    val previewDoc=vm.previewTextSize?.let {size->vm.selected?.let {id->vm.doc.update(id){it.copy(textSize=size)}}}
+        ?:vm.previewPen?.let {p->vm.selected?.let {id->vm.doc.update(id){it.copy(pen=p)}}} ?: vm.doc
     Scaffold(containerColor=Paper,modifier=Modifier.imePadding(),topBar={Column {
         TopAppBar(title={Column {Text("照片标注",fontSize=18.sp);Text(vm.saveStatus,fontSize=12.sp,color=if(vm.saveStatus=="保存失败") MaterialTheme.colorScheme.error else Quiet)}},navigationIcon={Tool(Icons.Outlined.ArrowBack,"返回",onClick=onBack)},actions={
             Primary("保存",modifier=Modifier.padding(end=4.dp),onClick=onBack)
@@ -76,15 +77,22 @@ import kotlin.math.roundToInt
         }
         if(active!=null) {
             var arrow by remember(active.id,active.pen.arrowSize) {mutableFloatStateOf(active.pen.arrowSize.coerceIn(MIN_ARROW_SIZE,MAX_ARROW_SIZE))}
+            var text by remember(active.id,active.textSize) {mutableFloatStateOf(active.labelSize)}
             Row(Modifier.fillMaxWidth().padding(start=16.dp,end=16.dp),verticalAlignment=Alignment.CenterVertically) {
                 Text("箭头",fontSize=13.sp,color=Quiet)
                 Slider(value=arrow,onValueChange={arrow=it;vm.previewStyle(active.pen.copy(arrowSize=it))},onValueChangeFinished={vm.style(active.pen.copy(arrowSize=arrow))},valueRange=MIN_ARROW_SIZE..MAX_ARROW_SIZE,steps=21,modifier=Modifier.weight(1f).padding(horizontal=12.dp).semantics {contentDescription="箭头大小"})
                 Text("${arrow.roundToInt()}",fontSize=13.sp,color=Quiet,modifier=Modifier.widthIn(min=20.dp),textAlign=TextAlign.End)
             }
+            Row(Modifier.fillMaxWidth().padding(start=16.dp,end=16.dp),verticalAlignment=Alignment.CenterVertically) {
+                Text("文字",fontSize=13.sp,color=Quiet)
+                // The capsule is measured from this point size, so the pill grows and shrinks with the glyphs.
+                Slider(value=text,onValueChange={text=it;vm.previewLabelSize(it)},onValueChangeFinished={vm.labelSize(text)},valueRange=MIN_LABEL_TEXT..MAX_LABEL_TEXT,steps=29,modifier=Modifier.weight(1f).padding(horizontal=12.dp).semantics {contentDescription="尺寸文字大小"})
+                Text("${text.roundToInt()}",fontSize=13.sp,color=Quiet,modifier=Modifier.widthIn(min=20.dp),textAlign=TextAlign.End)
+            }
         }
         HorizontalDivider(color=Rule)
         Row(Modifier.fillMaxWidth().padding(horizontal=8.dp,vertical=4.dp),horizontalArrangement=Arrangement.SpaceEvenly) {
-            EditorTool(Icons.Outlined.Edit,"画线",drawMode){drawMode=true;vm.selected=null}
+            EditorTool(Icons.Outlined.Edit,"标注",drawMode){drawMode=true;vm.selected=null}
             EditorTool(Icons.Outlined.NearMe,"选择",!drawMode){drawMode=false}
             EditorTool(Icons.Outlined.Notes,"备注",false){note=true}
             EditorTool(Icons.Outlined.Undo,"撤销",false,vm.canUndo){vm.undo()}
@@ -107,7 +115,7 @@ import kotlin.math.roundToInt
     }}
     if(settings) AlertDialog(onDismissRequest={settings=false},title={Text("标注设置")},text={Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-            Text("画线后自动填写尺寸",Modifier.weight(1f));Switch(vm.autoDimension,{vm.updateAutoDimension(it)},Modifier.semantics {contentDescription="画线后自动填写尺寸"})
+            Text("标注后自动填写尺寸",Modifier.weight(1f));Switch(vm.autoDimension,{vm.updateAutoDimension(it)},Modifier.semantics {contentDescription="标注后自动填写尺寸"})
         }
         Text("关闭后，点击线或尺寸标签填写尺寸。两种方式都可以点击修改，取消输入会保留线条。",fontSize=14.sp,color=Quiet)
     }},confirmButton={TextButton({settings=false}){Text("完成")}})

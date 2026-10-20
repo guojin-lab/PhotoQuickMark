@@ -35,21 +35,23 @@ class PhotoCanvas(context: Context): View(context) {
     private val gate=GestureGate();private var span=0f;private var center=Point(0f,0f)
     private val handleHit=26f*dp;private val handleRadius=7f*dp
     private fun transform()=Transform(bitmap?.width?.toFloat()?:1f,bitmap?.height?.toFloat()?:1f,scale,tx,ty)
+    /** Labels are drawn in bitmap space, so they shrink as the user pinches in and keep a constant size on screen. */
+    private fun zoom()=scale/max(base,1e-4f)
     fun fit() { val b=bitmap?:return; if(width==0||height==0) return; base=min(width.toFloat()/b.width,height.toFloat()/b.height)*0.94f;scale=base;tx=(width-b.width*scale)/2;ty=(height-b.height*scale)/2;lastFit=fitToken;fittedWidth=width;fittedHeight=height;invalidate() }
     override fun onSizeChanged(w: Int,h: Int,ow: Int,oh: Int) {super.onSizeChanged(w,h,ow,oh);fit()}
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas);val b=bitmap?:return
         if(lastFit!=fitToken || fittedWidth!=width || fittedHeight!=height) fit()
         val doc=draft?:document
-        canvas.save();canvas.translate(tx,ty);canvas.scale(scale,scale);canvas.drawBitmap(b,0f,0f,Paint(Paint.FILTER_BITMAP_FLAG));Renderer.annotations(canvas,doc,b.width.toFloat(),b.height.toFloat());canvas.restore()
+        canvas.save();canvas.translate(tx,ty);canvas.scale(scale,scale);canvas.drawBitmap(b,0f,0f,Paint(Paint.FILTER_BITMAP_FLAG));Renderer.annotations(canvas,doc,b.width.toFloat(),b.height.toFloat(),zoom());canvas.restore()
         val t=transform();val p=Paint(Paint.ANTI_ALIAS_FLAG).apply {strokeWidth=2*dp;color=0xFF2F655C.toInt();style=Paint.Style.STROKE}
         doc.segments.find {it.id==selected}?.let {s->listOf(s.start,s.end).forEach {id-> val q=t.screen(doc.vertex(id).point);p.style=Paint.Style.FILL;p.color=if(id==hitVertex) 0xFF2F655C.toInt() else Color.WHITE;canvas.drawCircle(q.x,q.y,handleRadius,p);p.style=Paint.Style.STROKE;p.color=0xFF2F655C.toInt();canvas.drawCircle(q.x,q.y,handleRadius,p) } }
         start?.let {a->end?.let {b2->val q=t.screen(a);val r=t.screen(b2);p.color=pen.color;p.strokeWidth=pen.width*min(b.width,b.height)/360*scale;p.strokeCap=Paint.Cap.ROUND;canvas.drawLine(q.x,q.y,r.x,r.y,p)}}
         snapId?.let {id->doc.vertices.find {it.id==id}?.let {val q=t.screen(it.point);p.color=0xFF2F655C.toInt();p.strokeWidth=2*dp;canvas.drawCircle(q.x,q.y,12*dp,p)}}
-        drawMagnifier(canvas,t,doc)
+        drawMagnifier(canvas,doc)
     }
     /** Loupe over the finger while drawing a line or moving a handle; it magnifies the same bitmap, annotations and in-progress line 2x. */
-    private fun drawMagnifier(c: Canvas,t: Transform,doc: Document) {
+    private fun drawMagnifier(c: Canvas,doc: Document) {
         val b=bitmap?:return;val anchor=magAnchor?:return;val focus=magFocus?:return
         val radius=64f*dp
         if(width<2*radius+12*dp || height<2*radius+12*dp) return
@@ -63,7 +65,7 @@ class PhotoCanvas(context: Context): View(context) {
         c.translate(cx,cy);c.scale(2f,2f);c.translate(-focus.x,-focus.y)
         c.translate(tx,ty);c.scale(scale,scale)
         c.drawBitmap(b,0f,0f,Paint(Paint.FILTER_BITMAP_FLAG))
-        Renderer.annotations(c,doc,b.width.toFloat(),b.height.toFloat())
+        Renderer.annotations(c,doc,b.width.toFloat(),b.height.toFloat(),zoom())
         if(drawMode) start?.let {a->end?.let {b2->c.drawLine(a.x*b.width,a.y*b.height,b2.x*b.width,b2.y*b.height,Paint(Paint.ANTI_ALIAS_FLAG).apply {color=pen.color;strokeWidth=pen.width*min(b.width,b.height)/360*scale;strokeCap=Paint.Cap.ROUND})}}
         c.restore()
         c.drawCircle(cx,cy,radius+1.5f*dp,Paint(Paint.ANTI_ALIAS_FLAG).apply {style=Paint.Style.STROKE;strokeWidth=5f*dp;color=0x55000000})
@@ -99,7 +101,7 @@ class PhotoCanvas(context: Context): View(context) {
                 hitVertex=null;hitLine=null;start=null;end=null;startId=null;snapId=null;magAnchor=null;magFocus=null;magSnap=false
                 if(!drawMode) handleAt(p,t)?.let {(seg,vertex)->if(seg!=selected) {selected=seg;onSelect(seg)};hitVertex=vertex}
                 hitLine=document.segments.minByOrNull {s->lineDistance(p,t.screen(document.vertex(s.start).point),t.screen(document.vertex(s.end).point))}?.takeIf {s->lineDistance(p,t.screen(document.vertex(s.start).point),t.screen(document.vertex(s.end).point))<12*dp}?.id
-                if(drawMode && inside(t.inverse(p))) {val v=snap(p);start=v?.point?:t.inverse(p);startId=v?.id}
+                if(drawMode && inside(t.inverse(p))) {val v=snap(p);val a=v?.point?:t.inverse(p);start=a;startId=v?.id;magAnchor=p;magFocus=t.screen(a);magSnap=v!=null}
             }
             MotionEvent.ACTION_POINTER_DOWN->{
                 gate.secondPointer();start=null;end=null;draft=null;snapId=null;magAnchor=null;magFocus=null
@@ -110,12 +112,13 @@ class PhotoCanvas(context: Context): View(context) {
                     if(e.pointerCount>=2) {val nextSpan=hypot(e.getX(1)-e.getX(0),e.getY(1)-e.getY(0));val nextCenter=Point((e.getX(0)+e.getX(1))/2,(e.getY(0)+e.getY(1))/2);val newScale=(scale*nextSpan/max(1f,span)).coerceIn(base,base*8);val ratio=newScale/scale;tx=nextCenter.x-(center.x-tx)*ratio;ty=nextCenter.y-(center.y-ty)*ratio;scale=newScale;span=nextSpan;center=nextCenter}
                 } else {
                     if(p.distance(down)>ViewConfiguration.get(context).scaledTouchSlop) moved=true
-                    if(moved) {
-                        if(drawMode && start!=null) {
-                            val v=snap(p);snapId=v?.id;val e=v?.point?:t.inverse(p).bounded();end=e
-                            magAnchor=p;magFocus=t.screen(e);magSnap=v!=null
-                        }
-                        else if(!drawMode && hitVertex!=null) {
+                    if(drawMode && start!=null) {
+                        val v=snap(p);val at=v?.point?:t.inverse(p).bounded()
+                        magAnchor=p;magFocus=t.screen(at);magSnap=v!=null
+                        if(moved) {snapId=v?.id;end=at}
+                    }
+                    else if(moved) {
+                        if(!drawMode && hitVertex!=null) {
                             val v=snap(p,hitVertex);snapId=v?.id
                             val next=original.move(hitVertex!!,v?.point?:t.inverse(p).bounded())
                             draft=next
