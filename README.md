@@ -1,60 +1,81 @@
+**简体中文** | [English](./README_en.md)
+
 # MeasurePhoto · 拍照快标
 
-[![Android CI](https://github.com/Lsama666/measure-photo/actions/workflows/android.yml/badge.svg)](https://github.com/Lsama666/measure-photo/actions/workflows/android.yml)
+[![Android CI](https://github.com/guojin-lab/PhotoQuickMark/actions/workflows/android.yml/badge.svg)](https://github.com/guojin-lab/PhotoQuickMark/actions/workflows/android.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-An offline Android tool for recording **manually measured dimensions on site photos**, then exporting annotated images and PDFs. Built with Kotlin, Jetpack Compose, Room and CameraX. Android 10+; current UI is Simplified Chinese.
+一款**完全离线**的 Android 工具：在现场照片上记录**人工实测的尺寸**，再导出带标注的图片和 PDF。基于 Kotlin、Jetpack Compose、Room 与 CameraX 构建，支持 Android 10 及以上，界面为简体中文。
 
-**Photos do not measure real-world dimensions.** Enter values measured with a tape or laser. Changing a value does not rescale the drawn line.
+> **照片本身不会测量真实尺寸。** 数值必须来自卷尺或激光测距仪的实测结果；修改数值不会让已画的线段重新缩放。
 
-Early-stage, newly public project maintained by [Lsama666](https://github.com/Lsama666). No claim of broad adoption, download volume or production certification. Version: 0.2.1.
+本项目是基于开源项目 [Lsama666/measure-photo](https://github.com/Lsama666/measure-photo) 的**二次创作**版本，现由 [guojin-lab](https://github.com/guojin-lab) 维护，当前版本 **1.0.0**。
 
-## What works
+## 核心特性
 
-- Create projects; capture or import photos; optionally label rooms and notes.
-- Draw dimension lines, snap shared endpoints, drag labels, zoom, undo and redo.
-- Keep original photos separate from annotations; save editing data locally.
-- Export annotated images through MediaStore and a multi-page PDF.
-- No account, server, analytics SDK, advertising or INTERNET permission in the application manifest.
+### 标注与测量
 
-The intended users are installers, interior designers and small workshop teams who need portable site records. The reusable engineering work includes normalized geometry, label placement, EXIF-aware rendering, shared endpoints and bounded-memory batch export.
+- **尺寸线绘制**：拖动画出直线，共享端点自动吸附，选中后可单独拖拽任一端点微调。
+- **局部放大镜**：标注或拖动端点时，手指上方浮现 2 倍放大区域，实时显示原图、已有标注和进行中的线条；命中吸附点时标记变绿，避免被手指遮挡。
+- **实心胶囊标签**：数值标签是随线段方向旋转的实心胶囊，居中压在线段中点之上；第二遍绘制保证胶囊覆盖所有穿过的线条，交叉处依然可读。标签按双指缩放反向补偿，**放大照片时字号在屏幕上保持恒定**，超出照片宽度的长数值会保留胶囊、自动收缩字号。
+- **实心箭头端头**：线段两端为实心箭头，笔画在箭头底部截断，不会穿透尖端。
+- **逐条线独立微调**：选中某条线后出现「箭头」与「文字」两根滑杆，分别调整这条线的箭头大小和标签字号，拖动时实时预览、松手生效，只影响当前这条线。
+- **mm / cm 单位**：按 `DimensionUnit` 切换毫米或厘米，输入框后缀与导出记录同步标注单位。
+- **标注后自动填写尺寸**：可在「标注设置」中开关；关闭后改为点击线条或标签再填写，取消输入不会删除已画的线。
+- **全局样式与历史**：线条颜色、线宽（细 / 中 / 粗）在工具条上选择，作用于当前画笔或选中线；支持撤销与重做。
 
-## Build and test
+### 数据与导出
 
-Clone into a local, non-synced directory. Install JDK 17 and Android SDK Platform 35 / Build Tools 35.0.0. Set `ANDROID_HOME` (or an untracked `local.properties` with `sdk.dir`).
+- **项目化管理**：新建项目，拍照或批量导入照片，可为每张照片标注房间名（30 字内）与备注（1000 字内）。
+- **原图与标注分离**：原始照片不动，标注数据以本地 Room 数据库保存，可随时回到编辑器继续修改。
+- **两种导出**：通过 MediaStore 导出带标注的图片到相册，以及多页 PDF。批量导出留有记录，中断后的未完成项可在「导出记录」中重试，已完成的相册图片保留。
+- **EXIF 方向感知**：按照片 EXIF 旋转信息正确渲染，避免横竖屏错位。
+- **内存可控**：大批量导出时对图片降采样，尺寸文字与线条仍按矢量绘制，不会被压缩糊掉。
+
+### 隐私
+
+无账号、无服务器、无统计 SDK、无广告，应用清单中**不申请 `INTERNET` 权限**，所有数据留在本机。
+
+## 适用人群
+
+需要便携现场记录的安装师傅、室内设计师和小型加工/施工班组。可复用的工程点包括归一化几何、标签避让、EXIF 感知渲染、共享端点与内存受限的批量导出。
+
+## 使用流程
+
+新建项目 → 拍照或导入 → 用「标注」拖出尺寸线 → 填写实测数值 → 保存 → 导出图片或 PDF。
+
+## 构建与测试
+
+请将仓库克隆到**本地、非网盘同步**的目录。需要 JDK 17 与 Android SDK Platform 35 / Build Tools 35.0.0，并设置 `ANDROID_HOME`（或写一个不纳入版本控制的 `local.properties`，内容为 `sdk.dir=<SDK 路径>`）。
 
 ```sh
 ./gradlew assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest
 ```
 
-On Windows use `gradlew.bat`. Gradle 8.11.1 is downloaded and checksum-verified by the wrapper. AGP is pinned to 8.9.2, Kotlin to 1.9.25 and Compose compiler to 1.5.15. Network access is required to obtain build dependencies; the app itself runs offline.
+Windows 下使用 `gradlew.bat`。Gradle 8.11.1 由 wrapper 下载并做校验和验证；AGP 锁定 8.9.2，Kotlin 锁定 1.9.25，Compose 编译器锁定 1.5.15。拉取构建依赖需要联网，**应用本身完全离线运行**。
 
-The APK is at `app/build/outputs/apk/debug/app-debug.apk`. CI publishes a debug APK and test reports as workflow artifacts. These require GitHub sign-in to download. Debug builds are for evaluation, not an app-store release, and signing keys may differ across CI runs.
+APK 产物位于 `app/build/outputs/apk/debug/app-debug.apk`。CI 会把 debug APK 与测试报告作为 workflow 制品发布，下载需要登录 GitHub。Debug 构建仅用于评估，不是应用商店发布版本，且不同 CI 机器的签名密钥可能不同。
 
-Device tests on a disposable test device/emulator:
+在可随意处置的测试机或模拟器上执行设备测试：
 
 ```sh
 ./gradlew connectedDebugAndroidTest
 ```
 
-The 100-photo load test is opt-in; see [testing](docs/TESTING.md). Do not use private client photos in bug reports.
+100 张照片的负载测试需要显式开启，见 [测试说明](docs/TESTING.md)。提交缺陷报告时请勿附带客户真实照片。
 
-## Preview and current limits
+## 预览与当前限制
 
-<img src="docs/images/editor-v0.1.0.png" alt="Historical v0.1.0 editor with a synthetic test image" width="300" />
+<img src="docs/images/editor-v0.1.0.png" alt="v0.1.0 历史版编辑器截图，使用合成测试图" width="300" />
 
-This is a **historical v0.1.0 device screenshot**, using synthetic test imagery. In v0.2.1 the white label background has been removed and label placement/interaction changed. It is not a screenshot of the current build.
+这是一张 **v0.1.0 的历史设备截图**，图像为合成测试素材。v0.2.1 移除了标签的白色底衬并改动了标签摆放与交互；v1.0.0 又加入了逐条线的箭头 / 字号滑杆、标签的缩放补偿，工具名也从「画线」改为「标注」。**它不是当前构建的截图。**
 
-Review [verification and remaining gaps](docs/TESTING.md) before relying on the app. No iOS release. Large-batch PDF images are downsampled to control memory; dimensions remain vector text/lines. Full manual device coverage, interrupted-export recovery and older/low-memory phones remain open work.
+在正式依赖本应用前，请先阅读[验证情况与遗留缺口](docs/TESTING.md)。暂无 iOS 版本。完整的人工设备覆盖、导出中断后的恢复、以及低内存机型的适配仍属未完成工作。
 
-## Contributing
+## 参与贡献
 
-See [CONTRIBUTING.md](CONTRIBUTING.md), [roadmap](docs/ROADMAP.md) and [security policy](SECURITY.md). Contributions in Chinese or English are welcome. Maintainer reviews all proposed changes. AI assistance may be used, but generated changes still need tests and review.
+参见 [CONTRIBUTING.md](CONTRIBUTING.md)、[路线图](docs/ROADMAP.md) 与[安全策略](SECURITY.md)。中英文提案都欢迎，所有改动由维护者审核。可以使用 AI 辅助，但生成的改动同样需要测试与评审。
 
-## 中文说明
+## 开源许可
 
-给现场照片记录实测尺寸，导出图片和 PDF。新建项目 → 拍照或导入 → 画线 → 填写毫米数 → 保存 → 导出。尺寸必须自行测量；照片不能自动推算真实长度。当前为早期 Android 测试版，无账号、云端或应用内联网功能。完整测试边界见 [测试说明](docs/TESTING.md)。
-
-## License
-
-Project code is released under the [MIT License](LICENSE). Dependencies retain their own licenses; see [third-party notices](THIRD_PARTY_NOTICES.md).
+本项目以 [MIT License](LICENSE) 发布。上游 [Lsama666/measure-photo](https://github.com/Lsama666/measure-photo) 同样采用 MIT 许可，其版权声明按许可要求保留在 `LICENSE` 中。依赖项保留各自许可证，见[第三方声明](THIRD_PARTY_NOTICES.md)。
