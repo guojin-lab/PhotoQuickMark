@@ -54,7 +54,7 @@
 
 Windows 下使用 `gradlew.bat`。Gradle 8.11.1 由 wrapper 下载并做校验和验证；AGP 锁定 8.9.2，Kotlin 锁定 1.9.25，Compose 编译器锁定 1.5.15。拉取构建依赖需要联网，**应用本身完全离线运行**。
 
-APK 产物位于 `app/build/outputs/apk/debug/app-debug.apk`。CI 会把 debug APK 与测试报告作为 workflow 制品发布，下载需要登录 GitHub。Debug 构建仅用于评估，不是应用商店发布版本，且不同 CI 机器的签名密钥可能不同。
+试用版本可在 [Releases](https://github.com/guojin-lab/PhotoQuickMark/releases) 直接下载 CI 构建的 `app-debug.apk`，无需自行编译。APK 产物也位于 `app/build/outputs/apk/debug/app-debug.apk`；CI 还会把 debug APK 与测试报告作为 workflow 制品发布，制品下载需要登录 GitHub。Debug 构建仅用于评估，不是应用商店发布版本，且不同 CI 机器的签名密钥可能不同。
 
 在可随意处置的测试机或模拟器上执行设备测试：
 

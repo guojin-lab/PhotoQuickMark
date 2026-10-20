@@ -39,7 +39,7 @@ Clone into a local, non-synced directory. Install JDK 17 and Android SDK Platfor
 
 On Windows use `gradlew.bat`. Gradle 8.11.1 is downloaded and checksum-verified by the wrapper. AGP is pinned to 8.9.2, Kotlin to 1.9.25 and Compose compiler to 1.5.15. Network access is required to obtain build dependencies; the app itself runs offline.
 
-The APK is at `app/build/outputs/apk/debug/app-debug.apk`. CI publishes a debug APK and test reports as workflow artifacts. These require GitHub sign-in to download. Debug builds are for evaluation, not an app-store release, and signing keys may differ across CI runs.
+A trial build can be downloaded directly from [Releases](https://github.com/guojin-lab/PhotoQuickMark/releases) as the CI-built `app-debug.apk` without compiling. The APK is also at `app/build/outputs/apk/debug/app-debug.apk`. CI additionally publishes a debug APK and test reports as workflow artifacts. These require GitHub sign-in to download. Debug builds are for evaluation, not an app-store release, and signing keys may differ across CI runs.
 
 Device tests on a disposable test device/emulator:
 
