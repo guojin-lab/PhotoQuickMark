@@ -1,6 +1,6 @@
 plugins { id("com.android.application"); id("org.jetbrains.kotlin.android"); id("org.jetbrains.kotlin.kapt") }
 android {
-    namespace = "com.lsama.measurephoto"
+    namespace = "com.guojinlab.photoquickmark"
     compileSdk = 35
     defaultConfig {
         applicationId = "com.guojinlab.photoquickmark"
