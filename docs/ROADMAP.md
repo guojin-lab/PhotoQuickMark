@@ -2,7 +2,7 @@
 
 Planned work, not shipped features or delivery promises:
 
-1. Reproduce a complete device-test run; add current screenshots with synthetic data.
+1. Reproduce a complete device-test run without a dropped ADB connection.
 2. Add export interruption/storage-failure regression coverage.
 3. Test accessibility, large fonts, landscape and low-memory devices.
 4. Add English UI strings and reproducible sample workflows.

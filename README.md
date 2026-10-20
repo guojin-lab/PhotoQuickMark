@@ -66,9 +66,23 @@ APK 产物位于 `app/build/outputs/apk/debug/app-debug.apk`。CI 会把 debug A
 
 ## 预览与当前限制
 
-<img src="docs/images/editor-v0.1.0.png" alt="v0.1.0 历史版编辑器截图，使用合成测试图" width="300" />
+以下均为 **v1.0.0 真机截图**。画面中的现场照片是真实量尺记录，仅用于展示界面效果。
 
-这是一张 **v0.1.0 的历史设备截图**，图像为合成测试素材。v0.2.1 移除了标签的白色底衬并改动了标签摆放与交互；v1.0.0 又加入了逐条线的箭头 / 字号滑杆、标签的缩放补偿，工具名也从「画线」改为「标注」。**它不是当前构建的截图。**
+<table>
+  <tr>
+    <td><img src="docs/images/v1.0.0-projects.jpg" alt="项目列表：新建项目入口与引导文案" width="215" /></td>
+    <td><img src="docs/images/v1.0.0-editor.jpg" alt="标注模式：拖动画直线、双指缩放，两条尺寸线带胶囊标签" width="215" /></td>
+    <td><img src="docs/images/v1.0.0-loupe.jpg" alt="拖动端点时的 2 倍放大镜，下方是箭头与文字滑杆" width="215" /></td>
+    <td><img src="docs/images/v1.0.0-handles.jpg" alt="选择模式：选中线的端点手柄，箭头 15 / 文字 16 两根滑杆" width="215" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/v1.0.0-dimension.jpg" alt="尺寸输入面板：mm / cm 单位与数字键盘" width="215" /></td>
+    <td><img src="docs/images/v1.0.0-note.jpg" alt="现场备注编辑面板" width="215" /></td>
+    <td><img src="docs/images/v1.0.0-export.jpg" alt="导出结果：带标注的照片与项目、照片序号、单位、备注页脚" width="215" /></td>
+  </tr>
+</table>
+
+v1.0.0 相对早期版本的变化：移除了标签的白色底衬，胶囊改为随线段方向旋转并压在线段之上；新增逐条线的箭头 / 文字滑杆与标签缩放补偿；工具名从「画线」改为「标注」。
 
 在正式依赖本应用前，请先阅读[验证情况与遗留缺口](docs/TESTING.md)。暂无 iOS 版本。完整的人工设备覆盖、导出中断后的恢复、以及低内存机型的适配仍属未完成工作。
 

@@ -6,7 +6,7 @@ The maintainer's original project includes JUnit XML reports with 11 geometry te
 
 The original verification notes record successful debug/test APK builds, JVM tests and lint. Six device test cases reported success individually, but the ADB connection dropped before the overall runner completed (exit code 1). This is **not** a clean end-to-end instrumentation run.
 
-The historical v0.1.0 screenshot in the README is a real device capture with synthetic content. It does not demonstrate the current v1.0.0 UI. No current device screenshot was retrieved in that historical run.
+The README now shows current v1.0.0 screenshots captured by hand on the test phone; they document the interface only and are not evidence of an instrumentation run. The earlier v0.1.0 synthetic capture referenced above has been replaced.
 
 ## Fresh public-repository checks
 
@@ -23,7 +23,7 @@ Use a test device without valuable project data. Normal instrumentation:
 The load test generates 100 synthetic 4000×3000 JPEGs with 100 annotations each and requires explicit opt-in, after installing both app and test APK:
 
 ```sh
-adb shell am instrument -w -r -e class com.lsama.measurephoto.LoadTest -e load true com.lsama.measurephoto.test/androidx.test.runner.AndroidJUnitRunner
+adb shell am instrument -w -r -e class com.guojinlab.photoquickmark.LoadTest -e load true com.guojinlab.photoquickmark.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
 It consumes storage and memory. Historical v0.1.0 load results do not establish performance on other devices or current code. Large PDFs downsample photos; exported image files retain a separate resolution policy.

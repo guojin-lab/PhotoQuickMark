@@ -51,11 +51,25 @@ The 100-photo load test is opt-in; see [testing](docs/TESTING.md). Do not use pr
 
 ## Preview and current limits
 
-<img src="docs/images/editor-v0.1.0.png" alt="Historical v0.1.0 editor with a synthetic test image" width="300" />
+All images below are **v1.0.0 device screenshots**. The site photo in them is a real measurement record, shown only to demonstrate the interface.
 
-This is a **historical v0.1.0 device screenshot**, using synthetic test imagery. In v0.2.1 the white label background was removed and label placement/interaction changed; v1.0.0 added the per-line arrow and text-size sliders, zoom-compensated labels, and renamed the Draw tool to Annotate. It is not a screenshot of the current build.
+<table>
+  <tr>
+    <td><img src="docs/images/v1.0.0-projects.jpg" alt="Project list with the new-project call to action" width="215" /></td>
+    <td><img src="docs/images/v1.0.0-editor.jpg" alt="Annotate mode: drag to draw a line, pinch to zoom, two capsule labels" width="215" /></td>
+    <td><img src="docs/images/v1.0.0-loupe.jpg" alt="2x loupe while dragging an endpoint, with the arrow and text sliders below" width="215" /></td>
+    <td><img src="docs/images/v1.0.0-handles.jpg" alt="Select mode: endpoint handles plus arrow 15 and text 16 sliders" width="215" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/v1.0.0-dimension.jpg" alt="Dimension sheet with mm / cm units and the numeric keyboard" width="215" /></td>
+    <td><img src="docs/images/v1.0.0-note.jpg" alt="On-site note editor" width="215" /></td>
+    <td><img src="docs/images/v1.0.0-export.jpg" alt="Export result: annotated photo with project, photo index, unit and note footer" width="215" /></td>
+  </tr>
+</table>
 
-Review [verification and remaining gaps](docs/TESTING.md) before relying on the app. No iOS release. Large-batch PDF images are downsampled to control memory; dimensions remain vector text/lines. Full manual device coverage, interrupted-export recovery and older/low-memory phones remain open work.
+What changed since the earlier releases: the white label backing was removed and capsules now rotate with their segment and sit on top of it; per-line arrow and text sliders plus zoom-compensated labels were added; the Draw tool was renamed to Annotate.
+
+Review [verification and remaining gaps](docs/TESTING.md) before relying on the app. No iOS release. Large-batch PDF images are downsampled to control memory; dimensions remain vector text and lines. Full manual device coverage, interrupted-export recovery and older or low-memory phones remain open work.
 
 ## Contributing
 
