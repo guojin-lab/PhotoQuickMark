@@ -6,11 +6,11 @@ The maintainer's original project includes JUnit XML reports with 11 geometry te
 
 The original verification notes record successful debug/test APK builds, JVM tests and lint. Six device test cases reported success individually, but the ADB connection dropped before the overall runner completed (exit code 1). This is **not** a clean end-to-end instrumentation run.
 
-The historical v0.1.0 screenshot in the README is a real device capture with synthetic content. It does not demonstrate the current v0.2.1 UI. No current device screenshot was retrieved in that historical run.
+The historical v0.1.0 screenshot in the README is a real device capture with synthetic content. It does not demonstrate the current v1.0.0 UI. No current device screenshot was retrieved in that historical run.
 
 ## Fresh public-repository checks
 
-See the [Actions runs](https://github.com/Lsama666/measure-photo/actions) for fresh results tied to an exact commit. CI checks unit tests, Android lint, debug assembly and instrumentation-test compilation. It does **not** run device tests or establish human usability.
+See the [Actions runs](https://github.com/guojin-lab/PhotoQuickMark/actions) for fresh results tied to an exact commit. CI checks unit tests, Android lint, debug assembly and instrumentation-test compilation. It does **not** run device tests or establish human usability.
 
 ## Device and load tests
 
@@ -31,9 +31,8 @@ It consumes storage and memory. Historical v0.1.0 load results do not establish 
 ## Outstanding acceptance
 
 - Complete camera/Photo Picker/export destination and denied-permission flows.
+- Manual coverage for the per-line arrow and label-size sliders: the capsule must re-measure at the selected size, keep a constant on-screen size while pinching, and survive undo, export and reopening the photo.
 - Human gesture testing, accessibility, landscape, larger fonts and screen sizes.
 - Kill/restart recovery, storage exhaustion and interrupted-export fault injection.
 - Older/low-memory device coverage and database upgrade migrations.
 - Current UI screenshots and complete device test runs without connection failure.
-
-There are no verified public download/adoption metrics at initial publication.

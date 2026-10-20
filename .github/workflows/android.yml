@@ -23,6 +23,8 @@ jobs:
       - name: Install SDK
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Grant execute permission for Gradle wrapper
+        run: chmod +x gradlew
       - name: Build and check
         run: ./gradlew --no-daemon --console=plain --max-workers=2 testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest
       - name: Upload reports
@@ -37,5 +39,5 @@ jobs:
       - name: Upload evaluation APK
         uses: actions/upload-artifact@v4
         with:
-          name: measure-photo-debug
+          name: PhotoQuickMark-debug
           path: app/build/outputs/apk/debug/app-debug.apk
