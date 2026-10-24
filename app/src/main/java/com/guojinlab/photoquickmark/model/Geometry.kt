@@ -61,13 +61,14 @@ fun lineDistance(p: Point,a: Point,b: Point): Float {
     val t=(((p.x-a.x)*dx+(p.y-a.y)*dy)/len).coerceIn(0f,1f)
     return p.distance(Point(a.x+t*dx,a.y+t*dy))
 }
-class History(initial: Document) {
+class History(initial: EditState) {
     var current=initial; private set
-    private val past=ArrayDeque<Document>(); private val future=ArrayDeque<Document>()
+    private val past=ArrayDeque<EditState>(); private val future=ArrayDeque<EditState>()
     val canUndo get()=past.isNotEmpty(); val canRedo get()=future.isNotEmpty()
-    fun commit(next: Document): Boolean { if(next==current) return false; past.addLast(current); while(past.size>75) past.removeFirst(); future.clear(); current=next.copy(revision=current.revision+1); return true }
-    fun undo(): Document { if(canUndo) {future.addLast(current);current=past.removeLast().copy(revision=current.revision+1)};return current }
-    fun redo(): Document { if(canRedo) {past.addLast(current);current=future.removeLast().copy(revision=current.revision+1)};return current }
+    private fun bumped(state: EditState)=state.copy(document=state.document.copy(revision=current.document.revision+1))
+    fun commit(next: EditState): Boolean { if(next==current) return false; past.addLast(current); while(past.size>75) past.removeFirst(); future.clear(); current=bumped(next); return true }
+    fun undo(): EditState { if(canUndo) {future.addLast(current);current=bumped(past.removeLast())};return current }
+    fun redo(): EditState { if(canRedo) {past.addLast(current);current=bumped(future.removeLast())};return current }
 }
 /** A second pointer cancels the draft, and blocks drawing until every pointer is up. */
 class GestureGate {

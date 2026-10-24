@@ -24,7 +24,7 @@ class PhotoCanvas(context: Context): View(context) {
     private var lastFit=-1
     private val dp=resources.displayMetrics.density
     private var scale=1f;private var tx=0f;private var ty=0f;private var base=1f
-    private var fittedWidth=0;private var fittedHeight=0
+    private var fittedWidth=0;private var fittedHeight=0;private var fittedBitmap: Bitmap?=null
     private var down=Point(0f,0f);private var previous=down
     private var start: Point?=null;private var end: Point?=null
     private var startId: String?=null;private var snapId: String?=null
@@ -41,7 +41,8 @@ class PhotoCanvas(context: Context): View(context) {
     override fun onSizeChanged(w: Int,h: Int,ow: Int,oh: Int) {super.onSizeChanged(w,h,ow,oh);fit()}
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas);val b=bitmap?:return
-        if(lastFit!=fitToken || fittedWidth!=width || fittedHeight!=height) fit()
+        // A rotated photo is a different bitmap with swapped sides, so refit instead of reusing the old transform.
+        if(fittedBitmap!==b || lastFit!=fitToken || fittedWidth!=width || fittedHeight!=height) {fittedBitmap=b;fit()}
         val doc=draft?:document
         canvas.save();canvas.translate(tx,ty);canvas.scale(scale,scale);canvas.drawBitmap(b,0f,0f,Paint(Paint.FILTER_BITMAP_FLAG));Renderer.annotations(canvas,doc,b.width.toFloat(),b.height.toFloat(),zoom());canvas.restore()
         val t=transform();val p=Paint(Paint.ANTI_ALIAS_FLAG).apply {strokeWidth=2*dp;color=0xFF2F655C.toInt();style=Paint.Style.STROKE}

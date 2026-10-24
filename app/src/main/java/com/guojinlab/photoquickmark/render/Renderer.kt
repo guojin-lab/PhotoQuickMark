@@ -23,17 +23,26 @@ object Photos {
             7->{setRotate(-90f);postScale(-1f,1f)};8->setRotate(-90f)
         }
     }
-    fun decode(path: String,maxEdge: Int): Bitmap {
+    /** Quarter turns are applied after EXIF correction, so drawing size follows the turned bitmap. */
+    fun decode(path: String,maxEdge: Int,rotation: Int=0): Bitmap {
         val (w,h,o)=info(path)
         var sample=1;while(max(w,h)/sample>maxEdge*2) sample*=2
         val raw=BitmapFactory.decodeFile(path,BitmapFactory.Options().apply { inSampleSize=sample;inMutable=true;inPreferredConfig=Bitmap.Config.ARGB_8888 }) ?: error("无法解码照片")
         val oriented=Bitmap.createBitmap(raw,0,0,raw.width,raw.height,matrix(o),true)
         if(oriented!==raw) raw.recycle()
-        val scale=min(1f,maxEdge.toFloat()/max(oriented.width,oriented.height))
-        val resized=if(scale<1) Bitmap.createScaledBitmap(oriented,max(1,(oriented.width*scale).roundToInt()),max(1,(oriented.height*scale).roundToInt()),true) else oriented
-        if(resized!==oriented) oriented.recycle()
+        val turned=turn(oriented,rotation)
+        if(turned!==oriented) oriented.recycle()
+        val scale=min(1f,maxEdge.toFloat()/max(turned.width,turned.height))
+        val resized=if(scale<1) Bitmap.createScaledBitmap(turned,max(1,(turned.width*scale).roundToInt()),max(1,(turned.height*scale).roundToInt()),true) else turned
+        if(resized!==turned) turned.recycle()
         if(resized.isMutable) return resized
         return resized.copy(Bitmap.Config.ARGB_8888,true).also { resized.recycle() }
+    }
+    /** Returns a turned copy (odd quarter turns swap width/height); the source is never modified. */
+    fun turn(source: Bitmap,quarterTurns: Int): Bitmap {
+        val turns=((quarterTurns%4)+4)%4
+        if(turns==0) return source
+        return Bitmap.createBitmap(source,0,0,source.width,source.height,Matrix().apply {postRotate(90f*turns)},true)
     }
 }
 object Renderer {
@@ -93,7 +102,11 @@ object Renderer {
             val color=s.pen.color or 0xFF000000.toInt()
             val cx=g.center.x;val cy=g.center.y
             c.save()
-            // Rotate around the midpoint so the pill follows the line; the folded angle keeps text upright.
+            // g.angle is already folded into (-90°, 90°], so a line drawn from either endpoint
+            // still gets upright glyphs. Rotating about the capsule centre keeps the label pinned
+            // to the midpoint; the text is centred on that same pivot by measured width and
+            // ascent/descent, so no textAlign/textBaseline compensation is needed, and the
+            // surrounding canvas scale never changes the rotation itself.
             c.rotate(g.angle,cx,cy)
             val left=cx-g.width/2;val top=cy-g.height/2
             val r=RectF(left,top,left+g.width,top+g.height)

@@ -48,7 +48,7 @@ import kotlin.math.roundToInt
     var fit by remember {mutableIntStateOf(0)}
     var more by remember {mutableStateOf(false)}
     var settings by remember {mutableStateOf(false)}
-    val bitmap by produceState<Bitmap?>(null,photo.id) {try {value=withContext(Dispatchers.IO) {Photos.decode(photo.originalPath,2048)}} catch(t: Exception){vm.error="照片加载失败：${t.message}"}}
+    val bitmap by produceState<Bitmap?>(null,photo.id,photo.rotation) {value=null;try {value=withContext(Dispatchers.IO) {Photos.decode(photo.originalPath,2048,photo.rotation)}} catch(t: Exception){vm.error="照片加载失败：${t.message}"}}
     val lifecycle=LocalLifecycleOwner.current
     DisposableEffect(lifecycle,photo.id) {val observer=LifecycleEventObserver {_,event->if(event==Lifecycle.Event.ON_STOP) vm.flush()};lifecycle.lifecycle.addObserver(observer);onDispose {lifecycle.lifecycle.removeObserver(observer)}}
     BackHandler {when {dimensionId!=null->dimensionId=null;note->{note=false;vm.flush()};vm.selected!=null->vm.selected=null;else->onBack()}}
@@ -91,12 +91,14 @@ import kotlin.math.roundToInt
             }
         }
         HorizontalDivider(color=Rule)
-        Row(Modifier.fillMaxWidth().padding(horizontal=8.dp,vertical=4.dp),horizontalArrangement=Arrangement.SpaceEvenly) {
-            EditorTool(Icons.Outlined.Edit,"标注",drawMode){drawMode=true;vm.selected=null}
-            EditorTool(Icons.Outlined.NearMe,"选择",!drawMode){drawMode=false}
-            EditorTool(Icons.Outlined.Notes,"备注",false){note=true}
-            EditorTool(Icons.Outlined.Undo,"撤销",false,vm.canUndo){vm.undo()}
-            EditorTool(Icons.Outlined.Redo,"重做",false,vm.canRedo){vm.redo()}
+        Row(Modifier.fillMaxWidth().padding(horizontal=4.dp,vertical=4.dp)) {
+            EditorTool(Icons.Outlined.Edit,"标注",drawMode,modifier=Modifier.weight(1f)){drawMode=true;vm.selected=null}
+            EditorTool(Icons.Outlined.NearMe,"选择",!drawMode,modifier=Modifier.weight(1f)){drawMode=false}
+            EditorTool(Icons.Outlined.Notes,"备注",false,modifier=Modifier.weight(1f)){note=true}
+            EditorTool(Icons.Outlined.Undo,"撤销",false,vm.canUndo,modifier=Modifier.weight(1f)){vm.undo()}
+            EditorTool(Icons.Outlined.Redo,"重做",false,vm.canRedo,modifier=Modifier.weight(1f)){vm.redo()}
+            EditorTool(Icons.Outlined.Rotate90DegreesCcw,"左转",false,modifier=Modifier.weight(1f)){vm.rotate(false)}
+            EditorTool(Icons.Outlined.Rotate90DegreesCw,"右转",false,modifier=Modifier.weight(1f)){vm.rotate(true)}
         }
     }}}) {padding->Column(Modifier.padding(padding).fillMaxSize()) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -148,8 +150,9 @@ import kotlin.math.roundToInt
         }
     }}
 }
-@Composable private fun EditorTool(icon: androidx.compose.ui.graphics.vector.ImageVector,label: String,selected: Boolean,enabled: Boolean=true,onClick: ()->Unit) {
-    Column(Modifier.widthIn(min=56.dp).clickable(enabled=enabled,onClick=onClick).padding(vertical=8.dp),horizontalAlignment=Alignment.CenterHorizontally) {
-        Icon(icon,null,Modifier.size(22.dp),tint=if(!enabled) Quiet.copy(alpha=.35f) else if(selected) Green else Quiet);Spacer(Modifier.height(4.dp));Text(label,fontSize=11.sp,color=if(!enabled) Quiet.copy(alpha=.35f) else if(selected) Green else Quiet)
+@Composable private fun EditorTool(icon: androidx.compose.ui.graphics.vector.ImageVector,label: String,selected: Boolean,enabled: Boolean=true,modifier: Modifier=Modifier,onClick: ()->Unit) {
+    val tint=if(!enabled) Quiet.copy(alpha=.35f) else if(selected) Green else Quiet
+    Column(modifier.clickable(enabled=enabled,onClick=onClick).padding(vertical=8.dp),horizontalAlignment=Alignment.CenterHorizontally) {
+        Icon(icon,null,Modifier.size(22.dp),tint=tint);Spacer(Modifier.height(4.dp));Text(label,fontSize=11.sp,color=tint,maxLines=1)
     }
 }

@@ -9,7 +9,7 @@ An offline Android tool for recording **manually measured dimensions on site pho
 
 **Photos do not measure real-world dimensions.** Enter values measured with a tape or laser. Changing a value does not rescale the drawn line.
 
-This project is a **derivative work** of the open-source project [Lsama666/measure-photo](https://github.com/Lsama666/measure-photo), now maintained by [guojin-lab](https://github.com/guojin-lab). Version: 1.0.0.
+This project is a **derivative work** of the open-source project [Lsama666/measure-photo](https://github.com/Lsama666/measure-photo), now maintained by [guojin-lab](https://github.com/guojin-lab). Version: 1.0.1 ([changelog](CHANGELOG_en.md)).
 
 ## What works
 

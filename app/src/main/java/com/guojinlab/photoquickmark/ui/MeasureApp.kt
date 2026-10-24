@@ -127,7 +127,7 @@ import java.util.Locale
     rename?.let {p->TextDialog("项目名称",p.name,onDismiss={rename=null}) {name->vm.action {vm.store.dao.project(p.copy(name=name,updatedAt=System.currentTimeMillis()))}}}
     deleteProject?.let {p->Confirm("删除项目？","项目内部照片与标注将被删除。已导出的相册图片和 PDF 不受影响。",{deleteProject=null}) {vm.action {vm.store.deleteProject(p)}}}
     if(deletePhotos) Confirm("删除 ${selected.size} 张照片？","删除照片及其可编辑标注。已导出的文件会保留。",{deletePhotos=false}) {vm.action {vm.store.deletePhotos(projectPhotos.filter {it.id in selected});selected=emptySet();selection=false}}
-    if(about) AlertDialog(onDismissRequest={about=false},title={Text("拍照快标")},text={Text("人工量尺，照片记录。\n\n数据保存在本机。卸载或清空 APP 数据会丢失可编辑项目；相册图片和 PDF 是导出成品，不是可重新编辑的项目备份。\n\n测试版 0.2.1")},confirmButton={TextButton({about=false}){Text("知道了")}})
+    if(about) AlertDialog(onDismissRequest={about=false},title={Text("拍照快标")},text={Text("人工量尺，照片记录。\n\n数据保存在本机。卸载或清空 APP 数据会丢失可编辑项目；相册图片和 PDF 是导出成品，不是可重新编辑的项目备份。\n\n测试版 1.0.1")},confirmButton={TextButton({about=false}){Text("知道了")}})
     if(sort) SortSheet(projectPhotos,{sort=false}) {list->vm.action {vm.store.dao.order(list);sort=false}}
     if(exportPanel && project!=null) ModalBottomSheet(onDismissRequest={exportPanel=false},containerColor=Paper) {
         val list=if(selection) projectPhotos.filter {it.id in selected} else projectPhotos

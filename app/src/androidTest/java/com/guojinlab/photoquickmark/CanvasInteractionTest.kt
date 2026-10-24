@@ -15,6 +15,8 @@ import com.guojinlab.photoquickmark.model.Point
 import com.guojinlab.photoquickmark.render.Renderer
 import org.junit.Assert.*
 import org.junit.Test
+import java.io.File
+import kotlin.math.*
 
 class CanvasInteractionTest {
     private fun line()=Document().add(Point(.2f,.5f),Point(.8f,.5f),null,null,Pen()).let {d->d.update(d.segments.single().id){it.copy(dimension="100")}}
@@ -63,6 +65,36 @@ class CanvasInteractionTest {
             assertEquals("line spans between the heads",s.pen.color,b.getPixel(180,180))
         } finally {b.recycle()}
     }
+    @Test fun reversingTheLineNeverFlipsOrShiftsTheLabel() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val context=ApplicationProvider.getApplicationContext<android.content.Context>()
+            val size=360;val mid=180f;val reach=110f
+            val tiles=mutableListOf<Bitmap>()
+            for(deg in intArrayOf(0,30,45,60,90,120,135,150,180,210,225,240,270,300,315,330)) {
+                val rad=Math.toRadians(deg.toDouble())
+                val a=Point(mid+reach*cos(rad).toFloat(),mid+reach*sin(rad).toFloat())
+                val b=Point(mid-reach*cos(rad).toFloat(),mid-reach*sin(rad).toFloat())
+                fun render(start: Point,end: Point): Bitmap {
+                    var d=Document().add(Point(start.x/size,start.y/size),Point(end.x/size,end.y/size),null,null,Pen(width=12f,arrowSize=20f))
+                    d=d.update(d.segments.single().id){it.copy(dimension="2200")}
+                    val bitmap=Bitmap.createBitmap(size,size,Bitmap.Config.ARGB_8888)
+                    val c=Canvas(bitmap);c.drawColor(Color.WHITE);Renderer.annotations(c,d,size.toFloat(),size.toFloat())
+                    return bitmap
+                }
+                val forward=render(a,b);val backward=render(b,a)
+                assertTrue("${deg}°: reversing endpoints changed the label",forward.sameAs(backward))
+                tiles+=forward;backward.recycle()
+            }
+            // Montage kept for inspection: every tile must read left-to-right, never upside down.
+            val montage=Bitmap.createBitmap(size*4,size*4,Bitmap.Config.ARGB_8888)
+            val c=Canvas(montage);c.drawColor(Color.WHITE)
+            tiles.forEachIndexed {i,t->c.drawBitmap(t,(i%4)*size.toFloat(),(i/4)*size.toFloat(),null);t.recycle()}
+            val dir=File(context.getExternalFilesDir(null),"test-artifacts").apply {mkdirs()}
+            File(dir,"label-angles.png").outputStream().use {montage.compress(Bitmap.CompressFormat.PNG,100,it)}
+            montage.recycle()
+        }
+    }
+
     @Test fun capsuleIsCentredOnTheLineAndOnlyHidesItsOwnSpan() {
         val d=line();val s=d.segments.single();val g=Renderer.label(d,s,360f,360f)!!
         assertEquals(180f,g.center.x,.001f);assertEquals(180f,g.center.y,.001f);assertEquals(0f,g.angle,0f)

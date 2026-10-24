@@ -22,7 +22,8 @@ class AppModel(app: Application): AndroidViewModel(app) {
     var busy by mutableStateOf<String?>(null)
     var editing by mutableStateOf<Photo?>(null)
     var doc by mutableStateOf(Document()); private set
-    private var history=History(doc)
+    var rotation by mutableIntStateOf(0); private set
+    private var history=History(EditState(doc))
     var pen by mutableStateOf(store.pen()); private set
     var previewPen by mutableStateOf<Pen?>(null); private set
     var previewTextSize by mutableStateOf<Float?>(null); private set
@@ -46,10 +47,17 @@ class AppModel(app: Application): AndroidViewModel(app) {
     val exportEngine=ExportEngine(store)
     init {viewModelScope.launch(Dispatchers.IO) {runCatching {store.recover();exportEngine.recover()}.onFailure {withContext(Dispatchers.Main) {error="本地数据检查失败：${it.message}"}}}}
     fun action(block: suspend ()->Unit) {viewModelScope.launch {try {block()} catch(t: Exception) {error=t.message?:"操作失败"}}}
-    fun open(p: Photo) {editing=p;doc=store.document(p);history=History(doc);historyVersion++;selected=null;previewPen=null;previewTextSize=null;saveGeneration=0;savedGeneration=0;saveStatus="已保存"}
-    fun commit(next: Document) {if(history.commit(next)) {doc=history.current;historyVersion++;previewPen=null;previewTextSize=null;queueSave()}}
-    fun undo() {previewPen=null;previewTextSize=null;doc=history.undo();historyVersion++;selected=selected?.takeIf {id->doc.segments.any {it.id==id}};queueSave()}
-    fun redo() {previewPen=null;previewTextSize=null;doc=history.redo();historyVersion++;queueSave()}
+    fun open(p: Photo) {editing=p;rotation=p.rotation;doc=store.document(p);history=History(EditState(doc,rotation));historyVersion++;selected=null;previewPen=null;previewTextSize=null;saveGeneration=0;savedGeneration=0;saveStatus="已保存"}
+    fun commit(next: Document) = commit(EditState(next,rotation))
+    private fun commit(next: EditState) {if(history.commit(next)) {applyState();historyVersion++;previewPen=null;previewTextSize=null;queueSave()}}
+    fun undo() {previewPen=null;previewTextSize=null;history.undo();applyState();historyVersion++;selected=selected?.takeIf {id->doc.segments.any {it.id==id}};queueSave()}
+    fun redo() {previewPen=null;previewTextSize=null;history.redo();applyState();historyVersion++;queueSave()}
+    /** Turns the photo and its annotations together; both sides of the undo entry change at once. */
+    fun rotate(clockwise: Boolean) {
+        val next=(rotation+(if(clockwise) 1 else 3))%4
+        commit(EditState(doc.rotated(clockwise),next))
+    }
+    private fun applyState() {doc=history.current.document;rotation=history.current.rotation;editing=editing?.copy(rotation=rotation)}
     fun previewStyle(next: Pen?) {previewPen=next}
     fun previewLabelSize(next: Float?) {previewTextSize=next}
     fun labelSize(next: Float) {val id=selected;if(id!=null) commit(doc.update(id){it.copy(textSize=next.coerceIn(MIN_LABEL_TEXT,MAX_LABEL_TEXT))})}
@@ -58,7 +66,7 @@ class AppModel(app: Application): AndroidViewModel(app) {
     fun note(value: String) {editing=editing?.copy(note=value.take(1000));saveStatus="保存中";noteJob?.cancel();noteJob=viewModelScope.launch {delay(500);queueSave()}}
     fun flush() {noteJob?.cancel();queueSave()}
     private fun queueSave() {
-        val snapshot=editing?:return;val document=doc;val generation=++saveGeneration;saveStatus="保存中"
+        val snapshot=editing?.copy(rotation=rotation)?:return;val document=doc;val generation=++saveGeneration;saveStatus="保存中"
         viewModelScope.launch {
             saveMutex.withLock {
                 try {store.save(snapshot,document);savedGeneration=generation;if(generation==saveGeneration && editing?.id==snapshot.id) saveStatus="已保存"}

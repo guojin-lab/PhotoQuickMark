@@ -9,7 +9,7 @@
 
 > **照片本身不会测量真实尺寸。** 数值必须来自卷尺或激光测距仪的实测结果；修改数值不会让已画的线段重新缩放。
 
-本项目是基于开源项目 [Lsama666/measure-photo](https://github.com/Lsama666/measure-photo) 的**二次创作**版本，现由 [guojin-lab](https://github.com/guojin-lab) 维护，当前版本 **1.0.0**。
+本项目是基于开源项目 [Lsama666/measure-photo](https://github.com/Lsama666/measure-photo) 的**二次创作**版本，现由 [guojin-lab](https://github.com/guojin-lab) 维护，当前版本 **1.0.1**（[更新日志](CHANGELOG.md)）。
 
 ## 核心特性
 

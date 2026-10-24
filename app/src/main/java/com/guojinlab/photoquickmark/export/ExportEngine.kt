@@ -35,7 +35,7 @@ class ExportEngine(private val store: Store) {
     }
     private fun drawText(c: Canvas,text: String,x: Float,y: Float,width: Int,size: Float): Int {val layout=Renderer.text(text,width,size);c.save();c.translate(x,y);layout.draw(c);c.restore();return layout.height}
     private fun album(job: ExportJob,item: ExportItem): Uri {
-        val bmp=Photos.decode(item.photo.originalPath,4096)
+        val bmp=Photos.decode(item.photo.originalPath,4096,item.photo.rotation)
         var result: Bitmap?=null;var target: Uri?=null
         try {
             val unit=max(1f,bmp.width/600f);val pad=20*unit;val width=max(1,(bmp.width-2*pad).toInt())
@@ -66,7 +66,7 @@ class ExportEngine(private val store: Store) {
                 // Bound their total raster area; annotations remain vector at every batch size.
                 val aspect=min(item.photo.orientedWidth,item.photo.orientedHeight).toDouble()/max(item.photo.orientedWidth,item.photo.orientedHeight)
                 val maxEdge=sqrt(48_000_000.0/max(1,job.items.size)/aspect).toInt().coerceIn(1,2400)
-                val photo=Photos.decode(item.photo.originalPath,maxEdge)
+                val photo=Photos.decode(item.photo.originalPath,maxEdge,item.photo.rotation)
                 try {
                     val landscape=photo.width>photo.height;val w=if(landscape) 842 else 595;val h=if(landscape) 595 else 842
                     val page=pdf.startPage(PdfDocument.PageInfo.Builder(w,h,pageNumber+1).create());val c=page.canvas

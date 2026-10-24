@@ -3,6 +3,8 @@ package com.guojinlab.photoquickmark.data
 import android.content.Context
 import android.net.Uri
 import androidx.room.*
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.google.gson.Gson
 import com.guojinlab.photoquickmark.model.*
 import com.guojinlab.photoquickmark.render.Photos
@@ -16,9 +18,14 @@ import java.io.File
 
 @Entity data class Project(@PrimaryKey val id: String=uid(),val name: String,val createdAt: Long=System.currentTimeMillis(),val updatedAt: Long=System.currentTimeMillis())
 @Entity(indices=[Index("projectId")],foreignKeys=[ForeignKey(entity=Project::class,parentColumns=["id"],childColumns=["projectId"],onDelete=ForeignKey.CASCADE)])
+/**
+ * [orientedWidth]/[orientedHeight] describe the source after EXIF correction; [rotation]
+ * is the user's clockwise quarter-turn count applied on top whenever the bitmap is decoded.
+ */
 data class Photo(@PrimaryKey val id: String=uid(),val projectId: String,val originalPath: String,val thumbnailPath: String,
     val orientedWidth: Int,val orientedHeight: Int,val exifOrientation: Int=1,val roomName: String="",val note: String="",
-    val sortOrder: Int=0,val createdAt: Long=System.currentTimeMillis(),val updatedAt: Long=System.currentTimeMillis(),val document: String="")
+    val sortOrder: Int=0,val createdAt: Long=System.currentTimeMillis(),val updatedAt: Long=System.currentTimeMillis(),val document: String="",
+    val rotation: Int=0)
 @Entity data class ExportRecord(@PrimaryKey val id: String,val json: String,val updatedAt: Long=System.currentTimeMillis())
 @androidx.room.Dao interface Dao {
     @Query("SELECT * FROM Project ORDER BY updatedAt DESC") fun projects(): Flow<List<Project>>
@@ -36,11 +43,14 @@ data class Photo(@PrimaryKey val id: String=uid(),val projectId: String,val orig
     @Transaction suspend fun save(p: Photo) { photo(p);touch(p.projectId,System.currentTimeMillis()) }
     @Transaction suspend fun order(list: List<Photo>) { list.forEachIndexed { i,p->photo(p.copy(sortOrder=i)) };list.firstOrNull()?.let { touch(it.projectId,System.currentTimeMillis()) } }
 }
-@androidx.room.Database(entities=[Project::class,Photo::class,ExportRecord::class],version=1,exportSchema=true)
+@androidx.room.Database(entities=[Project::class,Photo::class,ExportRecord::class],version=2,exportSchema=true)
 abstract class Database: RoomDatabase() { abstract fun dao(): Dao }
+val MIGRATION_1_2=object: Migration(1,2) {
+    override fun migrate(db: SupportSQLiteDatabase) {db.execSQL("ALTER TABLE Photo ADD COLUMN rotation INTEGER NOT NULL DEFAULT 0")}
+}
 class Store(val context: Context) {
     companion object { private val fileMutex=Mutex() }
-    val db=Room.databaseBuilder(context,Database::class.java,"measure.db").build()
+    val db=Room.databaseBuilder(context,Database::class.java,"measure.db").addMigrations(MIGRATION_1_2).build()
     val dao=db.dao(); val gson=Gson()
     val media=File(context.filesDir,"photos").apply { mkdirs() }
     fun document(p: Photo): Document = if(p.document.isBlank()) Document() else gson.fromJson(p.document,Document::class.java).also { require(it.schemaVersion==1) { "不支持此标注版本" } }.let {d->
@@ -66,7 +76,7 @@ class Store(val context: Context) {
         next
     }}
     private fun makeThumbnail(p: Photo,doc: Document) {
-        val bitmap=Photos.decode(p.originalPath,640)
+        val bitmap=Photos.decode(p.originalPath,640,p.rotation)
         try { Renderer.annotations(android.graphics.Canvas(bitmap),doc,bitmap.width.toFloat(),bitmap.height.toFloat());
             val temp=File(p.thumbnailPath+".tmp");temp.outputStream().use { check(bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG,85,it)) };check(temp.renameTo(File(p.thumbnailPath)))
         } finally { bitmap.recycle() }
